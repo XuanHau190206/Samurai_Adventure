@@ -4,7 +4,7 @@ using namespace  std;
 
 int main(int argc, char* argv[]){
     const int FPS = 60;
-    const int FrameDelay = 1000/60;
+    const int FrameDelay = 1000/FPS;
     Uint32 lastFrameTime = SDL_GetTicks();
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -33,14 +33,19 @@ int main(int argc, char* argv[]){
     float jumpSpeed0 = 0;
     float gravity = 0.5;
     float jumpSpeed = -10;
-    
+    Uint32 lastFrameUpdate = 0;
+    const int animationDelay = 100;
+    bool isAttacking = false;
+    int count = 0;
     bool gamerunning = true;
     character run(vector2d(200, 510), runningRight, 7);
     bool isJumping = false;
     bool isJump = false;
+    bool ismoving = false;
     while(gamerunning){
         if(isJumping){
             run.pos.y += jumpSpeed0;
+            
             jumpSpeed0 += gravity;
         }
         if(run.pos.y>=510){
@@ -54,12 +59,12 @@ int main(int argc, char* argv[]){
             }else if(event.type == SDL_KEYDOWN){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
-                    run.ismoving = true;
+                    ismoving = true;
                     run.pos.x -= 10;
                     run.tex = runningLeft;
                     break;
                     case SDLK_RIGHT:
-                    run.ismoving = true;
+                    ismoving = true;
                     run.pos.x += 10;
                     run.tex = runningRight;
                     break;
@@ -70,46 +75,64 @@ int main(int argc, char* argv[]){
                             jumpSpeed0 = jumpSpeed;
                         
                     }
-                    switch(event.key.keysym.sym){
-                        case SDLK_LEFT:
-                        run.ismoving = true;
-                        run.pos.x -= 10;
-                        run.tex = runningLeft;
-                        break;
-                        case SDLK_RIGHT:
-                        run.ismoving = true;
-                        run.pos.x += 10;
-                        run.tex = runningRight;
-                        break;}
+                    
                     break;
                     case SDLK_q:
-                    run.isAttacking = true;
+                    isAttacking = true;
                     run.tex = attack;
                     break;
                 }
             }else if(event.type == SDL_KEYUP){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
-                    run.ismoving = false;
+                    ismoving = false;
                     break;
                     case SDLK_RIGHT:
-                    run.ismoving = false;
+                    ismoving = false;
                     break;
                     case SDLK_q:
-                    run.isAttacking = false;
+                    // isAttacking = false;
                     break;
                 }
-            }run.Physic();
+            }
         }
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime > lastFrameTime + FrameDelay) {
-            if (!run.isAttacking) {
-                run.UpdateRunFrame();
+            if (isAttacking) {
+                
+                Uint32 currentTime = SDL_GetTicks();
+                //WARNING
+                    if (currentTime > lastFrameUpdate + 16) {
+                        run.FrameIndex = (run.FrameIndex  + 1) % run.FrameCount;
+                        run.currentFrame.x = run.FrameIndex * run.currentFrame.w;
+                        lastFrameUpdate = currentTime;
+                        cout << 3;
+                        count++;
+                        
+                    }
+                    if(count == 7)
+                    {
+                        //WARNING
+                        isAttacking = false;
+                        count = 0;
+                    }
+                    
+                    
+                
             } else {
-                run.UpdateAttackFrame();
+                Uint32 currentTime = SDL_GetTicks();
+                if(ismoving){
+                    if (currentTime > lastFrameUpdate + animationDelay) {
+                        run.FrameIndex = (run.FrameIndex + 1) % run.FrameCount;
+                        run.currentFrame.x = run.FrameIndex * run.currentFrame.w;
+                        lastFrameUpdate = currentTime;
+                    }
+                }
+               
             }
             lastFrameTime = currentTime;
         }
+        SDL_Delay(FrameDelay);
         SDL_RenderClear(render);
         SDL_RenderCopy(render,background,NULL,NULL);
         for(entity & i : road){

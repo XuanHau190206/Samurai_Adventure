@@ -56,27 +56,11 @@ struct character {
             jumpSpeed0 = 0;
         }
     }
-    const int animationDelay = 100;
-    Uint32 lastFrameUpdate = 0;
     void UpdateRunFrame() {
-        Uint32 currentTime = SDL_GetTicks();
-        if(ismoving){
-            if (currentTime > lastFrameUpdate + animationDelay) {
-                FrameIndex = (FrameIndex + 1) % FrameCount;
-                currentFrame.x = FrameIndex * currentFrame.w;
-                lastFrameUpdate = currentTime;
-            }
-        }
+       
     }
     void UpdateAttackFrame(){
-        Uint32 currentTime = SDL_GetTicks();
-        if(isAttacking){
-            if (currentTime > lastFrameUpdate + animationDelay) {
-                FrameIndex = (FrameIndex + 1) % FrameCount;
-                currentFrame.x = FrameIndex * currentFrame.w;
-                lastFrameUpdate = currentTime;
-            }
-        }
+      
     }
 };
 struct entity
