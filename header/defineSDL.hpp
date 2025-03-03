@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <bits/stdc++.h>
+#include "const.hpp"
 using namespace std;
 struct vector2d
 {
@@ -28,6 +29,9 @@ struct character {
     float jumpSpeed0 = 0;
     float gravity = 0.5;
     float jumpSpeed = -10;
+    int count = 0;
+    Uint32 lastFrameUpdate = 0;
+    const int animationDelay = 100;
     character(vector2d POS,SDL_Texture *Tex,int frames){
         pos = POS;
         tex = Tex;
@@ -45,7 +49,7 @@ struct character {
             jumpSpeed0 = jumpSpeed;
         }
     }
-    void Physic(){
+    void jumpPhysic(){
         if(isJumping){
             pos.y += jumpSpeed0;
             jumpSpeed0 += gravity;
@@ -57,10 +61,28 @@ struct character {
         }
     }
     void UpdateRunFrame() {
-       
+        Uint32 currentTime = SDL_GetTicks();
+        if(ismoving){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                currentFrame.x = FrameIndex * currentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
+        }
     }
     void UpdateAttackFrame(){
-      
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime > lastFrameUpdate + 16) {
+            FrameIndex = (FrameIndex  + 1) % FrameCount;
+            currentFrame.x = FrameIndex * currentFrame.w;
+            lastFrameUpdate = currentTime;
+            count++;
+        }
+        if(count == 7)
+        {
+            isAttacking = false;
+            count = 0;
+        }    
     }
 };
 struct entity
