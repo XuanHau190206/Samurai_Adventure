@@ -24,11 +24,14 @@ struct character {
     int FrameCount;
     int FrameIndex;
     bool ismoving = false;
+    bool isMovingLeft = false;
+    bool isMovingRight = false;
     bool isJumping = false;
     bool isAttacking = false;
     float jumpSpeed0 = 0;
     float gravity = 0.5;
     float jumpSpeed = -10;
+    float speed = 10;
     int count = 0;
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
@@ -43,6 +46,16 @@ struct character {
         currentFrame.h = 100;
         
     };
+    void MovingLeft(){
+        if(isMovingLeft){
+            pos.x -= speed;
+        }
+    }
+    void MovingRight(){
+        if(isMovingRight){
+            pos.x += speed;
+        }
+    }
     void jump(){
         if(!isJumping){
             isJumping = true;
@@ -62,7 +75,7 @@ struct character {
     }
     void UpdateRunFrame() {
         Uint32 currentTime = SDL_GetTicks();
-        if(ismoving){
+        if(isMovingLeft||isMovingRight){
             if (currentTime > lastFrameUpdate + animationDelay) {
                 FrameIndex = (FrameIndex + 1) % FrameCount;
                 currentFrame.x = FrameIndex * currentFrame.w;

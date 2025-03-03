@@ -23,51 +23,29 @@ int main(int argc, char* argv[]){
     runningLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/RUNLEFT.png");
     SDL_Texture* attack;
     attack = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACK 1.png");
-    float jumpSpeed0 = 0;
-    float gravity = 0.5;
-    float jumpSpeed = -10;
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
-
     bool gamerunning = true;
     character action(vector2d(200, 510), runningRight, 7);
-    bool isJumping = false;
-    bool isJump = false;
-    bool ismoving = false;
     while(gamerunning){
-        if(isJumping){
-            action.pos.y += jumpSpeed0;
-            
-            jumpSpeed0 += gravity;
-        }
-        if(action.pos.y>=510){
-            isJumping = false;
-            action.pos.y=510;
-            jumpSpeed0 = 0;
-        }
+        action.jumpPhysic();
+        action.MovingRight();
+        action.MovingLeft();
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 gamerunning = false;
             }else if(event.type == SDL_KEYDOWN){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
-                    action.ismoving = true;
-                    action.pos.x -= 10;
+                    action.isMovingLeft = true;
                     action.tex = runningLeft;
                     break;
                     case SDLK_RIGHT:
-                    action.ismoving = true;
-                    action.pos.x += 10;
+                    action.isMovingRight = true;
                     action.tex = runningRight;
                     break;
                     case SDLK_SPACE:
-                    if(!isJumping){
-                       
-                            isJumping = true;
-                            jumpSpeed0 = jumpSpeed;
-                        
-                    }
-                    
+                    action.jump();
                     break;
                     case SDLK_q:
                     action.isAttacking = true;
@@ -77,10 +55,10 @@ int main(int argc, char* argv[]){
             }else if(event.type == SDL_KEYUP){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
-                    action.ismoving = false;
+                    action.isMovingLeft = false;
                     break;
                     case SDLK_RIGHT:
-                    action.ismoving = false;
+                    action.isMovingRight = false;
                     break;
                     case SDLK_q:
                     break;
