@@ -21,12 +21,17 @@ int main(int argc, char* argv[]){
     SDL_Texture* runningLeft;
     runningRight = IMG_LoadTexture(render,"C:/Users/game/res/image/RUNRIGHT.png");
     runningLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/RUNLEFT.png");
-    SDL_Texture* attack;
-    attack = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACK 1.png");
+    SDL_Texture* attackRight;
+    attackRight = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACKRIGHT.png");
+    SDL_Texture* attackLeft;
+    attackLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACKLEFT.png");
+    SDL_Texture* enemyfly;
+    enemyfly = IMG_LoadTexture(render,"C:/Users/game/res/image/FLYING.png");
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
     bool gamerunning = true;
     character action(vector2d(200, 510), runningRight, 7);
+    Enemy enemy(vector2d(200,200),enemyfly,4);
     while(gamerunning){
         action.jumpPhysic();
         action.MovingRight();
@@ -49,7 +54,11 @@ int main(int argc, char* argv[]){
                     break;
                     case SDLK_q:
                     action.isAttacking = true;
-                    action.tex = attack;
+                    if(action.isMovingRight){
+                        action.tex = attackRight;
+                    }else{
+                        action.tex = attackLeft;
+                    }
                     break;
                 }
             }else if(event.type == SDL_KEYUP){
@@ -72,6 +81,9 @@ int main(int argc, char* argv[]){
             } else {
                 action.UpdateRunFrame();
             }
+            if (enemy.isFlying){
+                enemy.updateFlyframe();
+            }
             lastFrameTime = currentTime;
         }
         SDL_Delay(FrameDelay);
@@ -83,7 +95,9 @@ int main(int argc, char* argv[]){
             SDL_RenderCopy(render,i.tex,&source,&dest);
         }
         SDL_Rect charDest = {action.pos.x, action.pos.y,action.currentFrame.w,action.currentFrame.h};
+        SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y,enemy.currentFrame.w,enemy.currentFrame.h};
         SDL_RenderCopy(render, action.tex, &action.currentFrame, &charDest);
+        SDL_RenderCopy(render,enemy.tex,&enemy.currentFrame,&eneDest);
         SDL_RenderPresent(render);
     }
     

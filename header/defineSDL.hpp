@@ -17,13 +17,42 @@ struct vector2d
         cout<<x<<" "<<y;
     }
 };
+struct Enemy{
+    vector2d pos;
+    SDL_Rect currentFrame;
+    SDL_Texture* tex;
+    int FrameCount;
+    int FrameIndex;
+    bool isFlying = true;
+    Uint32 lastFrameUpdate = 0;
+    const int animationDelay = 100;
+    Enemy(vector2d POS,SDL_Texture *Tex,int frames){
+        pos = POS;
+        tex = Tex;
+        FrameCount = frames;
+        FrameIndex = 0;
+        currentFrame.x = 0;
+        currentFrame.y = 0;
+        currentFrame.w = 50;
+        currentFrame.h = 71;
+    };
+    void updateFlyframe (){
+        Uint32 currentTime = SDL_GetTicks();
+        if(isFlying){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                currentFrame.x = FrameIndex * currentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
+        }
+    }
+};
 struct character {
     vector2d pos;
     SDL_Rect currentFrame;
     SDL_Texture* tex;
     int FrameCount;
     int FrameIndex;
-    bool ismoving = false;
     bool isMovingLeft = false;
     bool isMovingRight = false;
     bool isJumping = false;
