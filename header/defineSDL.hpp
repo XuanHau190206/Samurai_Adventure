@@ -33,7 +33,7 @@ struct Enemy{
         FrameIndex = 0;
         currentFrame.x = 0;
         currentFrame.y = 0;
-        currentFrame.w = 50;
+        currentFrame.w = 81;
         currentFrame.h = 71;
     };
     void updateFlyframe (){
@@ -53,6 +53,8 @@ struct character {
     SDL_Texture* tex;
     int FrameCount;
     int FrameIndex;
+    bool donothing = true;
+    bool isFacingRight = true;
     bool isMovingLeft = false;
     bool isMovingRight = false;
     bool isJumping = false;
@@ -71,8 +73,8 @@ struct character {
         FrameIndex = 0;
         currentFrame.x = 0;
         currentFrame.y = 0;
-        currentFrame.w = 100;
-        currentFrame.h = 100;
+        currentFrame.w = 96;
+        currentFrame.h = 96;
         
     };
     void MovingLeft(){
@@ -100,6 +102,16 @@ struct character {
             isJumping = false;
             pos.y=510;
             jumpSpeed0 = 0;
+        }
+    }
+    void UpdateIdleFrame() {
+        Uint32 currentTime = SDL_GetTicks();
+        if(donothing){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                currentFrame.x = FrameIndex * currentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
         }
     }
     void UpdateRunFrame() {

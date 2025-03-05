@@ -17,9 +17,13 @@ int main(int argc, char* argv[]){
     vector<entity> road = { entity(vector2d(0,500), texture),
                             entity(vector2d(581,500), texture),
                             entity(vector2d(581*2,500), texture)};
+    SDL_Texture* idleright;
+    idleright = IMG_LoadTexture(render,"C:/Users/game/res/image/IDLERIGHT.png");
+    SDL_Texture* idleleft;
+    idleleft = IMG_LoadTexture(render,"C:/Users/game/res/image/IDLELEFT.png");
     SDL_Texture* runningRight;
-    SDL_Texture* runningLeft;
     runningRight = IMG_LoadTexture(render,"C:/Users/game/res/image/RUNRIGHT.png");
+    SDL_Texture* runningLeft;
     runningLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/RUNLEFT.png");
     SDL_Texture* attackRight;
     attackRight = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACKRIGHT.png");
@@ -36,6 +40,11 @@ int main(int argc, char* argv[]){
         action.jumpPhysic();
         action.MovingRight();
         action.MovingLeft();
+        if(action.isFacingRight){
+            action.tex = idleright;
+        }else{
+            action.tex = idleleft;
+        }
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 gamerunning = false;
@@ -43,10 +52,14 @@ int main(int argc, char* argv[]){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
                     action.isMovingLeft = true;
+                    action.isFacingRight = false;
+                    action.donothing = false;
                     action.tex = runningLeft;
                     break;
                     case SDLK_RIGHT:
                     action.isMovingRight = true;
+                    action.isFacingRight = true;
+                    action.donothing = false;
                     action.tex = runningRight;
                     break;
                     case SDLK_SPACE:
@@ -54,7 +67,8 @@ int main(int argc, char* argv[]){
                     break;
                     case SDLK_q:
                     action.isAttacking = true;
-                    if(action.isMovingRight){
+                    action.donothing = false;
+                    if(action.isFacingRight){
                         action.tex = attackRight;
                     }else{
                         action.tex = attackLeft;
@@ -78,8 +92,10 @@ int main(int argc, char* argv[]){
         if (currentTime > lastFrameTime + FrameDelay) {
             if (action.isAttacking) {
                 action.UpdateAttackFrame();
-            } else {
+            } else if(action.isMovingLeft||action.isMovingRight) {
                 action.UpdateRunFrame();
+            }else if(action.donothing) {
+                
             }
             if (enemy.isFlying){
                 enemy.updateFlyframe();
