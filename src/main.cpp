@@ -40,10 +40,36 @@ int main(int argc, char* argv[]){
         action.jumpPhysic();
         action.MovingRight();
         action.MovingLeft();
-        if(action.isFacingRight){
-            action.tex = idleright;
-        }else{
-            action.tex = idleleft;
+            double Distance;
+            double DistanceX;
+            double DistanceY;
+            DistanceX = action.pos.x-enemy.pos.x;
+            DistanceY = action.pos.y-enemy.pos.y;
+            Distance = sqrt((DistanceX*DistanceX)+(DistanceY*DistanceY));
+            if(Distance < 300){
+                enemy.isnearplayer = true;
+            }else{
+                enemy.isnearplayer = false;
+            }
+        // if(action.isFacingRight){
+        //     action.tex = idleright;
+        // }else{
+        //     action.tex = idleleft;
+        // }
+
+        if(enemy.isnearplayer){
+            if(DistanceX>0){
+                enemy.pos.x += 2;
+            }else if(DistanceX<0){
+                enemy.pos.x -= 2;
+            }
+            if(DistanceY>0){
+                enemy.pos.y += 2;
+            }else if(DistanceY<0){
+                enemy.pos.y -= 2;
+            }
+        }else {
+            cout<<0;
         }
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
@@ -111,9 +137,9 @@ int main(int argc, char* argv[]){
             SDL_RenderCopy(render,i.tex,&source,&dest);
         }
         SDL_Rect charDest = {action.pos.x, action.pos.y,action.currentFrame.w,action.currentFrame.h};
-        SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y,enemy.currentFrame.w,enemy.currentFrame.h};
+        SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y,enemy.enemycurrentFrame.w,enemy.enemycurrentFrame.h};
         SDL_RenderCopy(render, action.tex, &action.currentFrame, &charDest);
-        SDL_RenderCopy(render,enemy.tex,&enemy.currentFrame,&eneDest);
+        SDL_RenderCopy(render,enemy.tex,&enemy.enemycurrentFrame,&eneDest);
         SDL_RenderPresent(render);
     }
     

@@ -17,36 +17,6 @@ struct vector2d
         cout<<x<<" "<<y;
     }
 };
-struct Enemy{
-    vector2d pos;
-    SDL_Rect currentFrame;
-    SDL_Texture* tex;
-    int FrameCount;
-    int FrameIndex;
-    bool isFlying = true;
-    Uint32 lastFrameUpdate = 0;
-    const int animationDelay = 100;
-    Enemy(vector2d POS,SDL_Texture *Tex,int frames){
-        pos = POS;
-        tex = Tex;
-        FrameCount = frames;
-        FrameIndex = 0;
-        currentFrame.x = 0;
-        currentFrame.y = 0;
-        currentFrame.w = 81;
-        currentFrame.h = 71;
-    };
-    void updateFlyframe (){
-        Uint32 currentTime = SDL_GetTicks();
-        if(isFlying){
-            if (currentTime > lastFrameUpdate + animationDelay) {
-                FrameIndex = (FrameIndex + 1) % FrameCount;
-                currentFrame.x = FrameIndex * currentFrame.w;
-                lastFrameUpdate = currentTime;
-            }
-        }
-    }
-};
 struct character {
     vector2d pos;
     SDL_Rect currentFrame;
@@ -66,6 +36,7 @@ struct character {
     int count = 0;
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
+    character() {}
     character(vector2d POS,SDL_Texture *Tex,int frames){
         pos = POS;
         tex = Tex;
@@ -137,6 +108,38 @@ struct character {
             isAttacking = false;
             count = 0;
         }    
+    }
+};
+struct Enemy{
+    character player;
+    vector2d pos;
+    SDL_Rect enemycurrentFrame;
+    SDL_Texture* tex;
+    int FrameCount;
+    int FrameIndex;
+    bool isFlying = true;
+    bool isnearplayer = false;
+    Uint32 lastFrameUpdate = 0;
+    const int animationDelay = 100;
+    Enemy(vector2d POS,SDL_Texture *Tex,int frames){
+        pos = POS;
+        tex = Tex;
+        FrameCount = frames;
+        FrameIndex = 0;
+        enemycurrentFrame.x = 0;
+        enemycurrentFrame.y = 0;
+        enemycurrentFrame.w = 81;
+        enemycurrentFrame.h = 71;
+    };
+    void updateFlyframe (){
+        Uint32 currentTime = SDL_GetTicks();
+        if(isFlying){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                enemycurrentFrame.x = FrameIndex * enemycurrentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
+        }
     }
 };
 struct entity
