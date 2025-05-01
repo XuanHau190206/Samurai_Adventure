@@ -29,13 +29,30 @@ int main(int argc, char* argv[]){
     attackRight = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACKRIGHT.png");
     SDL_Texture* attackLeft;
     attackLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/ATTACKLEFT.png");
-    SDL_Texture* enemyfly;
-    enemyfly = IMG_LoadTexture(render,"C:/Users/game/res/image/FLYING.png");
+    SDL_Texture* playerHurtRight;
+    playerHurtRight = IMG_LoadTexture(render,"C:/Users/game/res/image/HURTRIGHT.png");
+    SDL_Texture* playerHurtLeft;
+    playerHurtLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/HURTLEFT.png");
+    SDL_Texture* enemyflyleft;
+    enemyflyleft = IMG_LoadTexture(render,"C:/Users/game/res/image/FLYINGLEFT.png");
+    SDL_Texture* enemyflyright;
+    enemyflyright = IMG_LoadTexture(render,"C:/Users/game/res/image/FLYINGRIGHT.png");
+    SDL_Texture* enemyattackright;
+    enemyattackright = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyattackright.png");
+    SDL_Texture* enemyattackleft;
+    enemyattackleft = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyattackleft.png");
+    SDL_Texture* enemyHurtRight;
+    enemyHurtRight = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyHurtRight.png");
+    SDL_Texture* enemyHurtLeft;
+    enemyHurtLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyHurtLeft.png");
+    SDL_Texture* HPbar;
+    HPbar = IMG_LoadTexture(render,"C:/Users/game/res/image/HPBAR.png");
     Uint32 lastFrameUpdate = 0;
+    Uint32 lastbitetime = 0;
     const int animationDelay = 100;
     bool gamerunning = true;
-    character action(vector2d(200, 510), runningRight, 7);
-    Enemy enemy(vector2d(200,200),enemyfly,4);
+    character action(vector2d(200, 450), runningRight, 7);
+    Enemy enemy(vector2d(200,200),enemyflyleft,4);
     while(gamerunning){
         action.jumpPhysic();
         action.MovingRight();
@@ -43,33 +60,89 @@ int main(int argc, char* argv[]){
             double Distance;
             double DistanceX;
             double DistanceY;
-            DistanceX = action.pos.x-enemy.pos.x;
-            DistanceY = action.pos.y-enemy.pos.y;
+            DistanceX = action.pos.x-enemy.pos.x + 26;
+            DistanceY = action.pos.y-enemy.pos.y + 60;
             Distance = sqrt((DistanceX*DistanceX)+(DistanceY*DistanceY));
             if(Distance < 300){
                 enemy.isnearplayer = true;
             }else{
                 enemy.isnearplayer = false;
             }
-        // if(action.isFacingRight){
-        //     action.tex = idleright;
-        // }else{
-        //     action.tex = idleleft;
-        // }
+        if(action.donothing){
+            if(action.isFacingRight){
+                action.tex = idleright;
+            }else{
+                action.tex = idleleft;
+            }
+        }
 
         if(enemy.isnearplayer){
             if(DistanceX>0){
                 enemy.pos.x += 2;
+                enemy.isLeft = false;
+                enemy.isRight = true;
             }else if(DistanceX<0){
                 enemy.pos.x -= 2;
+                enemy.isRight = false;
+                enemy.isLeft = true;
             }
             if(DistanceY>0){
                 enemy.pos.y += 2;
             }else if(DistanceY<0){
                 enemy.pos.y -= 2;
             }
-        }else {
-            cout<<0;
+            if(enemy.isRight){
+                enemy.tex = enemyflyright;
+            }else if(enemy.isLeft){
+                enemy.tex = enemyflyleft;
+            }
+        }
+        if(Distance == 0 && !enemy.isDead){
+            enemy.enemyAttack = true;
+            action.isHurt = true;
+        }else{
+            enemy.enemyAttack = false;
+            action.isHurt = false;
+        }
+        if(action.isHurt){
+            action.UpdateHurtFrame();
+        }
+        if(enemy.enemyAttack){
+            if(enemy.isRight){
+                enemy.tex = enemyattackright;
+            }else if(enemy.isLeft) {
+                enemy.tex = enemyattackleft;
+                
+            }
+            if(action.isFacingRight){
+                action.tex = playerHurtRight;
+            }else{
+                action.tex = playerHurtLeft;
+            }
+            enemy.attackPlayer();
+        }
+        Uint32 bitecooldown = 1000;
+        Uint32 now = SDL_GetTicks();
+        if(enemy.enemyAttack&&now - lastbitetime > bitecooldown){
+            action.HP -= 10;
+            if(action.HP == 0){
+                action.isDead = true;
+            }
+            lastbitetime = now;
+        }
+        if(action.isAttacking && Distance<=70 && !enemy.isDead){
+            enemy.enemyAttack = false;
+            enemy.getHitCnt++;
+            if(enemy.getHitCnt == enemy.lastHitCnt){
+                enemy.isDead = true;
+            }
+            if(action.pos.x > enemy.pos.x){
+                enemy.tex = enemyHurtRight;
+                enemy.pos.x -=70;
+            }else if(action.pos.x < enemy.pos.x){
+                enemy.tex = enemyHurtLeft;
+                enemy.pos.x +=70;
+            }
         }
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
@@ -105,9 +178,11 @@ int main(int argc, char* argv[]){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
                     action.isMovingLeft = false;
+                    action.donothing = true;
                     break;
                     case SDLK_RIGHT:
                     action.isMovingRight = false;
+                    action.donothing = true;
                     break;
                     case SDLK_q:
                     break;
@@ -121,7 +196,7 @@ int main(int argc, char* argv[]){
             } else if(action.isMovingLeft||action.isMovingRight) {
                 action.UpdateRunFrame();
             }else if(action.donothing) {
-                
+                action.UpdateIdleFrame();
             }
             if (enemy.isFlying){
                 enemy.updateFlyframe();
@@ -136,10 +211,14 @@ int main(int argc, char* argv[]){
             SDL_Rect dest = {i.pos.x,i.pos.y,i.currentFrame.w, i.currentFrame.h};
             SDL_RenderCopy(render,i.tex,&source,&dest);
         }
-        SDL_Rect charDest = {action.pos.x, action.pos.y,action.currentFrame.w,action.currentFrame.h};
+        SDL_Rect charDest = {action.pos.x, action.pos.y,action.currentFrame.w*1.5,action.currentFrame.h*1.5};
         SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y,enemy.enemycurrentFrame.w,enemy.enemycurrentFrame.h};
-        SDL_RenderCopy(render, action.tex, &action.currentFrame, &charDest);
-        SDL_RenderCopy(render,enemy.tex,&enemy.enemycurrentFrame,&eneDest);
+        if(!action.isDead){
+            SDL_RenderCopy(render, action.tex, &action.currentFrame, &charDest);
+        }
+        if(!enemy.isDead){
+            SDL_RenderCopy(render,enemy.tex,&enemy.enemycurrentFrame,&eneDest);
+        }
         SDL_RenderPresent(render);
     }
     

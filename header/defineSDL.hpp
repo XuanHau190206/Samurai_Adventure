@@ -23,12 +23,16 @@ struct character {
     SDL_Texture* tex;
     int FrameCount;
     int FrameIndex;
+    int GetBite = 0;
+    int HP = 100;
     bool donothing = true;
     bool isFacingRight = true;
     bool isMovingLeft = false;
     bool isMovingRight = false;
     bool isJumping = false;
     bool isAttacking = false;
+    bool isHurt = false;
+    bool isDead = false;
     float jumpSpeed0 = 0;
     float gravity = 0.5;
     float jumpSpeed = -10;
@@ -69,9 +73,9 @@ struct character {
             pos.y += jumpSpeed0;
             jumpSpeed0 += gravity;
         }
-        if(pos.y>=510){
+        if(pos.y>=450){
             isJumping = false;
-            pos.y=510;
+            pos.y=450;
             jumpSpeed0 = 0;
         }
     }
@@ -109,6 +113,16 @@ struct character {
             count = 0;
         }    
     }
+    void UpdateHurtFrame(){
+        Uint32 currentTime = SDL_GetTicks();
+        if(isMovingLeft||isMovingRight){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                currentFrame.x = FrameIndex * currentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
+        }
+    }
 };
 struct Enemy{
     character player;
@@ -117,8 +131,14 @@ struct Enemy{
     SDL_Texture* tex;
     int FrameCount;
     int FrameIndex;
+    int getHitCnt = 0;
+    int lastHitCnt = 3;
     bool isFlying = true;
     bool isnearplayer = false;
+    bool enemyAttack = false;
+    bool isRight = false;
+    bool isLeft = false;
+    bool isDead = false;
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
     Enemy(vector2d POS,SDL_Texture *Tex,int frames){
@@ -134,6 +154,16 @@ struct Enemy{
     void updateFlyframe (){
         Uint32 currentTime = SDL_GetTicks();
         if(isFlying){
+            if (currentTime > lastFrameUpdate + animationDelay) {
+                FrameIndex = (FrameIndex + 1) % FrameCount;
+                enemycurrentFrame.x = FrameIndex * enemycurrentFrame.w;
+                lastFrameUpdate = currentTime;
+            }
+        }
+    }
+    void attackPlayer (){
+        Uint32 currentTime = SDL_GetTicks();
+        if(enemyAttack){
             if (currentTime > lastFrameUpdate + animationDelay) {
                 FrameIndex = (FrameIndex + 1) % FrameCount;
                 enemycurrentFrame.x = FrameIndex * enemycurrentFrame.w;
