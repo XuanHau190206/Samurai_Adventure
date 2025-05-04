@@ -35,8 +35,8 @@ struct character {
     bool isDead = false;
     float jumpSpeed0 = 0;
     float gravity = 0.5;
-    float jumpSpeed = -10;
-    float speed = 10;
+    float jumpSpeed = -12;
+    float speed = 12;
     int count = 0;
     Uint32 lastFrameUpdate = 0;
     const int animationDelay = 100;
@@ -115,7 +115,7 @@ struct character {
     }
     void UpdateHurtFrame(){
         Uint32 currentTime = SDL_GetTicks();
-        if(isMovingLeft||isMovingRight){
+        if(isHurt){
             if (currentTime > lastFrameUpdate + animationDelay) {
                 FrameIndex = (FrameIndex + 1) % FrameCount;
                 currentFrame.x = FrameIndex * currentFrame.w;
@@ -133,6 +133,9 @@ struct Enemy{
     int FrameIndex;
     int getHitCnt = 0;
     int lastHitCnt = 3;
+    int knockbackDuration = 0;
+    float knockback = 0.0;
+    bool isKnockback = false;
     bool isFlying = true;
     bool isnearplayer = false;
     bool enemyAttack = false;

@@ -45,46 +45,60 @@ int main(int argc, char* argv[]){
     enemyHurtRight = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyHurtRight.png");
     SDL_Texture* enemyHurtLeft;
     enemyHurtLeft = IMG_LoadTexture(render,"C:/Users/game/res/image/enemyHurtLeft.png");
-    SDL_Texture* HPbar;
-    HPbar = IMG_LoadTexture(render,"C:/Users/game/res/image/HPBAR.png");
+    SDL_Texture* GameOver;
+    GameOver = IMG_LoadTexture(render,"C:/Users/game/res/image/GameOver.png");
+    SDL_Texture* VICTORY;
+    VICTORY = IMG_LoadTexture(render,"C:/Users/game/res/image/VICTORY.png");
     Uint32 lastFrameUpdate = 0;
     Uint32 lastbitetime = 0;
     const int animationDelay = 100;
     bool gamerunning = true;
+    int level  = 1;
+    vector<Enemy> enemies;
+    int enemyspawn = 1;
     character action(vector2d(200, 450), runningRight, 7);
-    Enemy enemy(vector2d(200,200),enemyflyleft,4);
+    for(int i = 0; i < enemyspawn; i++) {
+        int x = 100 + rand() % 1000; // vị trí random
+        int y = 100 + rand() % 300;
+        enemies.push_back(Enemy(vector2d(x, y), enemyflyleft, 4));
+    }
+    bool Victory = false;
     while(gamerunning){
+        bool allenemiesisdead = true;
         action.jumpPhysic();
         action.MovingRight();
         action.MovingLeft();
             double Distance;
             double DistanceX;
             double DistanceY;
-            DistanceX = action.pos.x-enemy.pos.x + 26;
-            DistanceY = action.pos.y-enemy.pos.y + 60;
+            for(Enemy &enemy : enemies){
+                if(enemy.isDead){
+                    continue;
+                }
+                allenemiesisdead = false;
+            float PlayerCenterX = action.pos.x + (action.currentFrame.w * 1.5) / 2.0;
+            float PlayerCenterY = action.pos.y + (action.currentFrame.h * 1.5) / 2.0;
+            float EnemyCenterX = enemy.pos.x + enemy.enemycurrentFrame.w / 2.0;
+            float EnemyCenterY = enemy.pos.y + enemy.enemycurrentFrame.h / 2.0;
+            DistanceX = PlayerCenterX - EnemyCenterX;
+            DistanceY = PlayerCenterY - EnemyCenterY;
             Distance = sqrt((DistanceX*DistanceX)+(DistanceY*DistanceY));
-            if(Distance < 300){
+            if(Distance < 1000){
                 enemy.isnearplayer = true;
             }else{
                 enemy.isnearplayer = false;
             }
-        if(action.donothing){
-            if(action.isFacingRight){
-                action.tex = idleright;
-            }else{
-                action.tex = idleleft;
-            }
-        }
-
         if(enemy.isnearplayer){
-            if(DistanceX>0){
-                enemy.pos.x += 2;
-                enemy.isLeft = false;
-                enemy.isRight = true;
-            }else if(DistanceX<0){
-                enemy.pos.x -= 2;
-                enemy.isRight = false;
-                enemy.isLeft = true;
+            if(abs(DistanceX)>40){
+                if(DistanceX>40){
+                    enemy.pos.x += 2;
+                    enemy.isLeft = false;
+                    enemy.isRight = true;
+                }else if(DistanceX<-40){
+                    enemy.pos.x -= 2;
+                    enemy.isRight = false;
+                    enemy.isLeft = true;
+                }
             }
             if(DistanceY>0){
                 enemy.pos.y += 2;
@@ -97,27 +111,20 @@ int main(int argc, char* argv[]){
                 enemy.tex = enemyflyleft;
             }
         }
-        if(Distance == 0 && !enemy.isDead){
+        if(Distance <=60 && !enemy.isDead){
             enemy.enemyAttack = true;
+            enemy.isFlying = false;
             action.isHurt = true;
         }else{
             enemy.enemyAttack = false;
+            enemy.isFlying = true;
             action.isHurt = false;
-        }
-        if(action.isHurt){
-            action.UpdateHurtFrame();
         }
         if(enemy.enemyAttack){
             if(enemy.isRight){
                 enemy.tex = enemyattackright;
             }else if(enemy.isLeft) {
                 enemy.tex = enemyattackleft;
-                
-            }
-            if(action.isFacingRight){
-                action.tex = playerHurtRight;
-            }else{
-                action.tex = playerHurtLeft;
             }
             enemy.attackPlayer();
         }
@@ -130,20 +137,43 @@ int main(int argc, char* argv[]){
             }
             lastbitetime = now;
         }
-        if(action.isAttacking && Distance<=70 && !enemy.isDead){
-            enemy.enemyAttack = false;
+        if(action.isAttacking && Distance<100 && !enemy.isDead){
+            bool enemyinfront = (action.isFacingRight&&PlayerCenterX < EnemyCenterX)||(!action.isFacingRight&&PlayerCenterX > EnemyCenterX);
+            if(enemyinfront){
+                enemy.enemyAttack = false;
             enemy.getHitCnt++;
             if(enemy.getHitCnt == enemy.lastHitCnt){
                 enemy.isDead = true;
             }
             if(action.pos.x > enemy.pos.x){
                 enemy.tex = enemyHurtRight;
-                enemy.pos.x -=70;
+                enemy.pos.x -=100;
             }else if(action.pos.x < enemy.pos.x){
                 enemy.tex = enemyHurtLeft;
-                enemy.pos.x +=70;
+                enemy.pos.x +=100;
+            }
             }
         }
+        if (enemy.isFlying){
+            enemy.updateFlyframe();
+        }
+            }
+            if (allenemiesisdead) {
+                if(level>=5){
+                    Victory = true;
+                }
+                level++;
+                enemyspawn += 2;
+                enemies.clear();
+                for(int i = 0; i < enemyspawn; i++) {
+                    int x = 100 + rand() % 1000;
+                    int y = 100 + rand() % 300;
+                    enemies.push_back(Enemy(vector2d(x, y), enemyflyleft, 4));
+                }
+            }
+            if (action.pos.x < 0) {action.pos.x = 0;}
+            if (action.pos.x + action.currentFrame.w * 1.5 > 1285){
+                action.pos.x = 1285 - action.currentFrame.w * 1.5;}
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 gamerunning = false;
@@ -178,11 +208,9 @@ int main(int argc, char* argv[]){
                 switch(event.key.keysym.sym){
                     case SDLK_LEFT:
                     action.isMovingLeft = false;
-                    action.donothing = true;
                     break;
                     case SDLK_RIGHT:
                     action.isMovingRight = false;
-                    action.donothing = true;
                     break;
                     case SDLK_q:
                     break;
@@ -193,14 +221,31 @@ int main(int argc, char* argv[]){
         if (currentTime > lastFrameTime + FrameDelay) {
             if (action.isAttacking) {
                 action.UpdateAttackFrame();
-            } else if(action.isMovingLeft||action.isMovingRight) {
+            } else if (action.isHurt) {
+                action.donothing = false;
+                if(action.isFacingRight){
+                    action.tex = playerHurtRight;
+                }else{
+                    action.tex = playerHurtLeft;
+                }
+                if (action.isFacingRight) {
+                    action.tex = playerHurtRight;
+                } else {
+                    action.tex = playerHurtLeft;
+                }
+                action.UpdateHurtFrame();
+            } else if (action.isMovingLeft || action.isMovingRight) {
                 action.UpdateRunFrame();
-            }else if(action.donothing) {
+            } else {
+                action.donothing = true;
                 action.UpdateIdleFrame();
+                if (action.isFacingRight) {
+                    action.tex = idleright;
+                } else {
+                    action.tex = idleleft;
+                }
             }
-            if (enemy.isFlying){
-                enemy.updateFlyframe();
-            }
+            
             lastFrameTime = currentTime;
         }
         SDL_Delay(FrameDelay);
@@ -212,13 +257,96 @@ int main(int argc, char* argv[]){
             SDL_RenderCopy(render,i.tex,&source,&dest);
         }
         SDL_Rect charDest = {action.pos.x, action.pos.y,action.currentFrame.w*1.5,action.currentFrame.h*1.5};
-        SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y,enemy.enemycurrentFrame.w,enemy.enemycurrentFrame.h};
         if(!action.isDead){
             SDL_RenderCopy(render, action.tex, &action.currentFrame, &charDest);
         }
-        if(!enemy.isDead){
-            SDL_RenderCopy(render,enemy.tex,&enemy.enemycurrentFrame,&eneDest);
+        SDL_Rect HPback = {20,20,200,20};
+        SDL_SetRenderDrawColor(render, 50, 50, 50, 255);
+        SDL_RenderFillRect(render, &HPback);
+        SDL_Rect HPfront = {20,20,(int)((float)action.HP /100*200),20};
+        SDL_SetRenderDrawColor(render,200,0,0,255);
+        SDL_RenderFillRect(render,&HPfront);
+        for (Enemy& enemy : enemies) {
+            if (!enemy.isDead) {
+                SDL_Rect eneDest = {enemy.pos.x, enemy.pos.y, enemy.enemycurrentFrame.w, enemy.enemycurrentFrame.h};
+                SDL_RenderCopy(render, enemy.tex, &enemy.enemycurrentFrame, &eneDest);
+            }
         }
+        if (action.isDead) {
+            SDL_Rect gameOverDest = {0, 0, 1285, 700};
+            SDL_RenderCopy(render, GameOver, NULL, &gameOverDest);
+            SDL_RenderPresent(render);
+            bool gameOver = true;
+    SDL_Event e;
+    while (gameOver) {
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) {
+                gamerunning = false;
+                gameOver = false;
+            }
+            else if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_b) {
+                    action.pos = vector2d(200, 450);
+                    action.HP = 100;
+                    action.isDead = false;
+                    action.isHurt = false;
+                    action.isAttacking = false;
+                    action.isMovingLeft = false;
+                    action.isMovingRight = false;
+                    action.count = 0;
+                    enemies.clear();
+                    enemyspawn = 1;
+                    for (int i = 0; i < enemyspawn; i++) {
+                        int x = 100 + rand() % 1000;
+                        int y = 100 + rand() % 300;
+                        enemies.push_back(Enemy(vector2d(x, y), enemyflyleft, 4));
+                    }
+                    level = 1;
+                    gamerunning = true;
+                    gameOver = false;
+                }
+            }
+        }
+    }
+        }
+        if (Victory) {
+            SDL_Rect victoryRect = {0, 0, 1285, 700};
+            SDL_RenderCopy(render, VICTORY, NULL, &victoryRect);
+            SDL_RenderPresent(render);
+            SDL_Event e;
+            bool wait = true;
+            while (wait) {
+                while (SDL_PollEvent(&e)) {
+                    if (e.type == SDL_QUIT) {
+                        gamerunning = false;
+                        wait = false;
+                    } else if (e.type == SDL_KEYDOWN) {
+                        if (e.key.keysym.sym == SDLK_b) {
+                            // Reset game
+                            action.pos = vector2d(200, 450);
+                            action.HP = 100;
+                            action.isDead = false;
+                            action.isHurt = false;
+                            action.isAttacking = false;
+                            action.isMovingLeft = false;
+                            action.isMovingRight = false;
+                            action.count = 0;
+                            enemies.clear();
+                            level = 1;
+                            enemyspawn = 1;
+                            Victory = false;
+                            for (int i = 0; i < enemyspawn; i++) {
+                                int x = 100 + rand() % 1000;
+                                int y = 100 + rand() % 300;
+                                enemies.push_back(Enemy(vector2d(x, y), enemyflyleft, 4));
+                            }
+                            wait = false;
+                        }
+                    }
+                }
+            }
+            continue;
+        }        
         SDL_RenderPresent(render);
     }
     
